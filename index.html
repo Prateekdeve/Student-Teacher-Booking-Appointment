@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student-Teacher Appointment Booking</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="antialiased text-slate-800">
+
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <header class="bg-white shadow-md sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-calendar-check text-indigo-600 text-2xl"></i>
+                        <h1 class="text-xl font-bold text-slate-800">Appointment System</h1>
+                    </div>
+                    <div id="user-info" class="hidden items-center space-x-4">
+                        <span id="user-email" class="font-medium text-sm"></span>
+                        <button id="logout-btn" class="btn-secondary px-3 py-1.5 rounded-md text-sm font-semibold">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
+
+            <div id="loading-spinner" class="hidden fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+                <i class="fas fa-spinner fa-spin text-indigo-600 text-4xl"></i>
+            </div>
+
+            <div id="auth-view">
+                <div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg">
+                    <div id="auth-tabs" class="flex border-b border-slate-200 mb-6">
+                        <button data-tab="login" class="auth-tab-btn flex-1 py-2 font-semibold text-indigo-600 border-b-2 border-indigo-600">Login</button>
+                        <button data-tab="register" class="auth-tab-btn flex-1 py-2 font-semibold text-slate-500">Register</button>
+                    </div>
+
+                    <form id="login-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="login-email" class="block text-sm font-medium text-slate-700">Email</label>
+                                <input type="email" id="login-email" required class="input-field mt-1">
+                            </div>
+                            <div>
+                                <label for="login-password" class="block text-sm font-medium text-slate-700">Password</label>
+                                <input type="password" id="login-password" required class="input-field mt-1">
+                            </div>
+                            <button type="submit" class="w-full btn-primary py-2 px-4 rounded-md font-semibold">Login</button>
+                        </div>
+                    </form>
+
+                    <form id="register-form" class="hidden">
+                         <div class="space-y-4">
+                            <div>
+                                <label for="register-name" class="block text-sm font-medium text-slate-700">Full Name</label>
+                                <input type="text" id="register-name" required class="input-field mt-1">
+                            </div>
+                            <div>
+                                <label for="register-email" class="block text-sm font-medium text-slate-700">Email</label>
+                                <input type="email" id="register-email" required class="input-field mt-1">
+                            </div>
+                            <div>
+                                <label for="register-password" class="block text-sm font-medium text-slate-700">Password (min. 6 characters)</label>
+                                <input type="password" id="register-password" required class="input-field mt-1">
+                            </div>
+                            <button type="submit" class="w-full btn-primary py-2 px-4 rounded-md font-semibold">Register as Student</button>
+                        </div>
+                    </form>
+                    <p id="auth-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                </div>
+            </div>
+
+            <div id="pending-approval-view" class="hidden text-center mt-10">
+                <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+                    <i class="fas fa-hourglass-half text-yellow-500 text-4xl mb-4"></i>
+                    <h2 class="text-2xl font-bold mb-2">Registration Pending</h2>
+                    <p class="text-slate-600">Your registration is being reviewed by an administrator. Please check back later.</p>
+                </div>
+            </div>
+
+            <div id="admin-dashboard" class="hidden space-y-8">
+                 <h2 class="text-2xl font-bold mb-4">Admin Dashboard</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                         <h3 class="text-lg font-semibold mb-3 flex items-center"><i class="fas fa-user-check mr-2 text-green-500"></i>Approve Student Registrations</h3>
+                         <div id="pending-students-list" class="space-y-3 max-h-60 overflow-y-auto no-scrollbar"></div>
+                     </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                         <div class="flex justify-between items-center mb-3">
+                             <h3 class="text-lg font-semibold flex items-center"><i class="fas fa-chalkboard-teacher mr-2 text-blue-500"></i>Manage Teachers</h3>
+                             <button id="add-teacher-btn" class="btn-primary px-3 py-1.5 rounded-md text-sm font-semibold">Add Teacher</button>
+                         </div>
+                         <div id="teachers-list-admin" class="space-y-3 max-h-60 overflow-y-auto no-scrollbar"></div>
+                     </div>
+                 </div>
+            </div>
+ 
+            <div id="teacher-dashboard" class="hidden space-y-8">
+                 <h2 class="text-2xl font-bold mb-4">Teacher Dashboard</h2>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                         <h3 class="text-lg font-semibold mb-3"><i class="fas fa-calendar-alt mr-2 text-purple-500"></i>Manage Your Schedule</h3>
+                         <form id="schedule-form" class="space-y-3">
+                             <input type="datetime-local" id="schedule-datetime" class="input-field" required>
+                             <button type="submit" class="w-full btn-primary py-2 px-4 rounded-md font-semibold">Add Available Slot</button>
+                         </form>
+                         <div class="mt-4">
+                             <h4 class="font-semibold text-md mb-2">Your Available Slots:</h4>
+                             <div id="teacher-schedule-list" class="space-y-2 max-h-48 overflow-y-auto no-scrollbar"></div>
+                         </div>
+                     </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                         <h3 class="text-lg font-semibold mb-3"><i class="fas fa-tasks mr-2 text-teal-500"></i>Incoming Appointments</h3>
+                         <div id="teacher-appointments-list" class="space-y-3 max-h-96 overflow-y-auto no-scrollbar"></div>
+                     </div>
+                 </div>
+            </div>
+ 
+            <div id="student-dashboard" class="hidden space-y-8">
+                 <h2 class="text-2xl font-bold mb-4">Student Dashboard</h2>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                         <h3 class="text-lg font-semibold mb-3"><i class="fas fa-search mr-2 text-cyan-500"></i>Find a Teacher & Book an Appointment</h3>
+                         <input type="text" id="teacher-search" class="input-field mb-4" placeholder="Search by name, department, or subject...">
+                         <div id="teachers-list-student" class="space-y-3 max-h-80 overflow-y-auto no-scrollbar"></div>
+                     </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                         <h3 class="text-lg font-semibold mb-3"><i class="fas fa-history mr-2 text-orange-500"></i>My Appointments</h3>
+                         <div id="student-appointments-list" class="space-y-3 max-h-96 overflow-y-auto no-scrollbar"></div>
+                     </div>
+                 </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="teacher-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 id="teacher-modal-title" class="text-lg font-bold mb-4">Add New Teacher</h3>
+            <form id="teacher-form">
+                <input type="hidden" id="teacher-id">
+                <div class="space-y-4">
+                    <input type="text" id="teacher-name" placeholder="Full Name" class="input-field" required>
+                    <input type="email" id="teacher-email" placeholder="Email" class="input-field" required>
+                    <input type="password" id="teacher-password" placeholder="Password (leave blank if not changing)" class="input-field">
+                    <input type="text" id="teacher-department" placeholder="Department" class="input-field" required>
+                    <input type="text" id="teacher-subject" placeholder="Subject" class="input-field" required>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-teacher-modal" class="btn-secondary px-4 py-2 rounded-md font-semibold">Cancel</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-md font-semibold">Save Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="booking-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h3 class="text-lg font-bold mb-4">Book Appointment with <span id="booking-teacher-name" class="text-indigo-600"></span></h3>
+            <form id="booking-form">
+                <input type="hidden" id="booking-teacher-id">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Select an available time slot:</label>
+                        <select id="booking-time-slot" class="input-field mt-1" required></select>
+                    </div>
+                     <div>
+                        <label for="booking-message" class="block text-sm font-medium text-slate-700">Message (Purpose of appointment)</label>
+                        <textarea id="booking-message" rows="3" class="input-field mt-1" placeholder="e.g., Discussion about final year project." required></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-booking-modal" class="btn-secondary px-4 py-2 rounded-md font-semibold">Cancel</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-md font-semibold">Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="alert-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm text-center">
+            <div id="alert-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                 </div>
+            <h3 id="alert-title" class="text-lg font-medium text-gray-900">Success!</h3>
+            <p id="alert-message" class="text-sm text-gray-500 mt-2">Your action was successful.</p>
+            <div class="mt-5">
+                <button type="button" id="alert-ok-btn" class="w-full btn-primary py-2 px-4 rounded-md font-semibold">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js" type="module"></script>
+</body>
+</html>
